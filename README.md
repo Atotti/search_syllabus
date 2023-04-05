@@ -8,8 +8,6 @@ CSVを検索するウェブシステムです。`index.html`だけで作られ�
 - CSV変換：PapaParse
 - CSS：bulma
 
-# 使い方
-
-- カラムを指定して検索することができます
-- 数値のみのデータである場合はオプションで数値の比較で抽出できます
-- XMLHttpRrequest予めCSVのデータを読み込むことができます
+# 他
+シラバスのデータは https://github.com/tenk-9/tmuSyllabus_scraping から持ってきています。
+これは https://gitlab.com/tamoco-mocomoco/csv-search を参考に作られています。
