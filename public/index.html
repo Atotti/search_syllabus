@@ -186,12 +186,7 @@
                 <tr>
                   <template v-for="(col, index) in csvCols">
                     <td v-if="index !== csvCols.length - 1">
-                      <span
-                        @click="OpenLink(row[index])"
-                        v-if="row[index] && row[index].includes('http')"
-                      >
-                        【外部サイトを開く】
-                      </span>
+
                       <span v-else> {{row[index]}} </span>
                     </td>
                   </template>
