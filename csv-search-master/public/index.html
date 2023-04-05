@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>CSV Reader</title>
+    <link
+      rel="stylesheet"
+      href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css"
+    />
+    <link
+      href="https://fonts.googleapis.com/css?family=Open+Sans"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://jenil.github.io/bulmaswatch/default/bulmaswatch.min.css"
+    />
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"
+      integrity="sha512-rKFvwjvE4liWPlFnvH4ZhRDfNZ9FOpdkD/BU5gAIA3VS3vOQrQ5BjKgbO3kxebKhHdHcNUHLqxQYSoxee9UwgA=="
+      crossorigin="anonymous"
+    ></script>
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/bulma@0.7.5/css/bulma.min.css"
+    />
+  </head>
+
+  <body>
+    <section class="hero is-fullheight is-default is-bold">
+      <div id="app">
+        <div class="hero-head">
+          <nav class="navbar">
+            <div class="container">
+              <div class="navbar-brand">
+                <a class="navbar-item" href="../">
+                  <i
+                    style="color: slategrey"
+                    aria-hidden="true"
+                    class="fa fa-th fa-rotate-90"
+                  ></i>
+                  <p style="padding-left: 5px">
+                    {{ csvTitle || "CSV Reader" }}
+                  </p>
+                </a>
+
+                <span
+                  class="navbar-burger burger"
+                  data-target="navbarMenu"
+                  @click="isMenuOpen = !isMenuOpen"
+                  v-bind:class="{'is-active': isMenuOpen}"
+                >
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                </span>
+              </div>
+              <div
+                id="navbarMenu"
+                class="navbar-menu"
+                v-bind:class="{'is-active': isMenuOpen}"
+              >
+                <div class="navbar-end">
+                  <span class="navbar-item">
+                    <a class="button is-outlined">
+                      <span class="icon">
+                        <i class="fa fa-upload" aria-hidden="true"></i>
+                      </span>
+                      <span>Import</span>
+                      <input
+                        style="cursor: hand"
+                        class="file-input"
+                        @change="OpenDialog"
+                        type="file"
+                        accept=".csv"
+                      />
+                    </a>
+                  </span>
+                  <span
+                    class="navbar-item"
+                    v-if="isHttpReq"
+                    v-for="csvBtn in csvPathList"
+                  >
+                    <a class="button is-outlined">
+                      <span class="icon">
+                        <i class="fa fa-th fa-rotate-90" aria-hidden="true"></i>
+                      </span>
+                      <span>{{csvBtn.btnName}}</span>
+                      <input
+                        style="cursor: hand"
+                        class="file-input"
+                        @click="RequestCsvPath(csvBtn.csvPath)"
+                      />
+                    </a>
+                  </span>
+                </div>
+              </div>
+            </div>
+          </nav>
+        </div>
+
+        <div
+          style="padding: 20px"
+          class="container has-text-centered"
+          v-if="csvCols.length > 0"
+        >
+          <div class="field is-grouped">
+            <p class="control">
+              <span class="select">
+                <select v-model="selectedCol">
+                  <option v-for="col in csvCols">{{col}}</option>
+                </select>
+              </span>
+            </p>
+            <p class="control is-expanded">
+              <vue-simple-suggest
+                @keydown.enter="SearchBoxEnterkey"
+                placeholder="スペース（空白）を入力すると候補が表示されます。左で列を設定して検索する列を絞り込めます。"
+                v-model="searchKeyword"
+                :list="suggestList"
+                :filter-by-query="true">
+              </vue-simple-suggest>
+            </p>
+            <p class="control">
+              <a class="button is-info" @click="ColSearch"> Search </a>
+            </p>
+          </div>
+
+          <div class="control">
+            <label>
+              <input v-model="numSearchMode" type="checkbox" />
+              数値データオプション（全ての列では無効）：
+            </label>
+            <label class="radio">
+              <input
+                v-model="numSearchCondition"
+                type="radio"
+                name="num_condition"
+                value="eq"
+              />
+              等しい
+            </label>
+            <label class="radio">
+              <input
+                v-model="numSearchCondition"
+                type="radio"
+                name="num_condition"
+                value="gt"
+              />
+              以上
+            </label>
+            <label class="radio">
+              <input
+                v-model="numSearchCondition"
+                type="radio"
+                name="num_condition"
+                value="le"
+              />
+              以下
+            </label>
+          </div>
+        </div>
+
+        <div style="padding: 0 20px 0 20px">
+          <div class="control has-text-right">
+            <label v-if="csvData.length > 0"> {{csvData.length}} 件 </label>
+          </div>
+
+          <div class="container table-container has-text-centered">
+            <table
+              class="
+                table
+                is-bordered is-striped is-narrow is-hoverable is-fullwidth
+              "
+            >
+              <thead>
+                <tr>
+                  <template v-for="(col, index) in csvCols">
+                    <th v-if="index !== csvCols.length - 1">{{col}}</th>
+                  </template>
+                </tr>
+              </thead>
+              <tbody v-for="row in csvData">
+                <tr>
+                  <template v-for="(col, index) in csvCols">
+                    <td v-if="index !== csvCols.length - 1">
+                      <span
+                        @click="OpenLink(row[index])"
+                        v-if="row[index] && row[index].includes('http')"
+                      >
+                        【外部サイトを開く】
+                      </span>
+                      <span v-else> {{row[index]}} </span>
+                    </td>
+                  </template>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.5.16/dist/vue.js"></script>
+    <script type="text/javascript" src="https://unpkg.com/vue-simple-suggest"></script>
+    <link rel="stylesheet" href="https://unpkg.com/vue-simple-suggest/dist/styles.css">
+    <script>
+      let vueApp = new Vue({
+        el: "#app",
+        data: {
+          allSearchString: "全ての列",
+          isMenuOpen: false,
+          isHttpReq: false,
+          csvTitle: null,
+          csvCols: [],
+          csvData: [],
+          allCsvData: [],
+          selectedCol: null,
+          searchKeyword: null,
+          numSearchMode: false,
+          numSearchCondition: "eq",
+          numSearchParams: ["eq", "gt", "le"],
+          searchNumMode: false,
+          csvPathList: [
+            {
+              btnName:"2023",
+              csvPath:"csv/syllabus2023_sift-JIS.csv",
+            },
+          ],
+        },
+
+        methods: {
+          OpenDialog: function (csvEv) {
+            let file = csvEv.target.files[0];
+            this.csvTitle = file.name;
+            let reader = new FileReader();
+            let vueThis = this;
+            reader.onload = function (inputCsv) {
+              const res = inputCsv.target.result;
+              vueThis.ConvertCsv(res);
+            };
+            reader.readAsText(file, "Shift_JIS");
+          },
+          RequestCsvPath: function (csvPath) {
+            const vueThis = this;
+            new Promise((resolve, reject) => {
+              var httpReq = new XMLHttpRequest(); // HTTPでファイルを読み込むためのXMLHttpRrequestオブジェクトを生成、サーバと非同期通信するためのAPI
+              httpReq.open("get", csvPath, true); // アクセスするファイルを指定
+              httpReq.overrideMimeType("text/plain; charset=Shift_JIS");
+              httpReq.onload = () => {
+                vueThis.csvTitle = csvPath;
+                resolve(vueThis.ConvertCsv(httpReq.responseText));
+              };
+              httpReq.onerror = () => {
+                reject(new Error(httpReq.statusText));
+              };
+              httpReq.send(null); // HTTPリクエストの発行
+            });
+            //// Shift-JISが上手くいかないので保留
+            // Papa.parse(csvPath, {
+            //     // header: true,
+            //     encoding: 'Shift-JIS',
+            //     download: true,
+            //     dynamicTyping: true,
+            //     complete: function (results) {
+            //         vueThis.csvCols = results.data[0];
+            //         vueThis.selectedCol = vueThis.csvCols[0];
+            //         vueThis.csvData = results.data.slice(1);
+            //         vueThis.allCsvData = results.data.slice(1);
+            //     }
+            // });
+          },
+          ConvertCsv: function (csvData) {
+            const vueThis = this;
+            Papa.parse(csvData, {
+              complete: function (results) {
+                vueThis.csvCols = results.data[0];
+                vueThis.csvCols.push(vueThis.allSearchString);
+                vueThis.selectedCol = vueThis.allSearchString;
+                vueThis.csvData = results.data.slice(1);
+                vueThis.allCsvData = results.data.slice(1);
+                // console.log(results);
+              },
+            });
+          },
+          ColSearch: function () {
+            if (!this.selectedCol) {
+              return;
+            }
+            if (this.searchKeyword == "") {
+              this.csvData = this.allCsvData;
+              return;
+            }
+            if (this.numSearchMode) {
+              this.SearchNum();
+            } else {
+              this.SearchWord();
+            }
+          },
+          SearchWord: function () {
+            const vueThis = this;
+            const colIndex = vueThis.csvCols.indexOf(vueThis.selectedCol);
+            if (vueThis.selectedCol === this.allSearchString) {
+              vueThis.csvData = this.allCsvData.filter(function (item) {
+                return item.map(str => str.toLowerCase()).includes(vueThis.searchKeyword.toLowerCase());
+              });
+              return;
+            };
+
+            this.csvData = this.allCsvData.filter(function (item, index) {
+              if (!item[colIndex]) {
+                return false;
+              }
+              if (item[colIndex].toLowerCase().includes(vueThis.searchKeyword.toLowerCase())) {
+                return true;
+              }
+            });
+          },
+          SearchNum: function () {
+            const vueThis = this;
+            const colIndex = vueThis.csvCols.indexOf(vueThis.selectedCol);
+            this.csvData = this.allCsvData.filter(function (item, index) {
+              if (!item[colIndex]) {
+                return false;
+              }
+
+              const targetWord = item[colIndex].replace(/['"]+/g, "");
+              switch (vueThis.numSearchCondition) {
+                case vueThis.numSearchParams[0]: //eq
+                  if (targetWord == vueThis.searchKeyword) {
+                    return true;
+                  }
+                  break;
+                case vueThis.numSearchParams[1]: //gt
+                  if (targetWord >= vueThis.searchKeyword) {
+                    return true;
+                  }
+                  break;
+                case vueThis.numSearchParams[2]: //le
+                  if (targetWord <= vueThis.searchKeyword) {
+                    return true;
+                  }
+                  break;
+                default:
+                  return false;
+              }
+            });
+            console.log(this.csvData);
+          },
+          SearchBoxEnterkey: function (event) {
+            // 日本語入力中のEnterキー操作は無効にする
+            if (event.keyCode !== 13) {
+              return;
+            }
+            this.ColSearch();
+          },
+          OpenLink: function (linkPath) {
+            window.open(linkPath, "_blank");
+          },
+          suggestList: function () {
+            const vueThis = this;
+            let suggestList = [];
+            if (vueThis.selectedCol === vueThis.allSearchString) {
+              vueThis.allCsvData.filter(function (colItem) {
+                colItem.map(item => suggestList.push(item));
+              });
+              return Array.from(new Set(suggestList));
+            };
+
+            const colIndex = this.csvCols.indexOf(this.selectedCol);
+            this.allCsvData.filter(function (item) {
+                suggestList.push(item[colIndex])
+            });
+            return Array.from(new Set(suggestList))
+          }
+        },
+        mounted: function () {
+          if (location.href.indexOf("file") != -1) {
+            this.isHttpReq = false;
+            setTimeout(
+              function () {
+                alert("ローカルの場合はImportボタンからCSVを開いてください");
+              }.bind(this),
+              500
+            );
+            return;
+          } else {
+            this.isHttpReq = true;
+          }
+          if (this.csvPathList) {
+            this.RequestCsvPath(this.csvPathList[0].csvPath);
+          }
+        },
+        watch: {
+          searchKeyword: function () {
+            this.ColSearch();
+          },
+          selectedCol: function () {
+            this.searchKeyword = "";
+          }
+        }
+      });
+    </script>
+    <style type="text/css">
+      html,
+      body {
+        font-family: "Open Sans";
+      }
+    </style>
+  </body>
+</html>
