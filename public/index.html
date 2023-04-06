@@ -153,8 +153,11 @@
                       <span
                         @click="OpenLink(row[index])"
                         v-if="row[index] && row[index].includes('http')"
-                      ><p v-if="row[index] && row[index].includes('_07_')"><font color="aqua">シラバスのリンク ※この科目は2017年以前入学者向けです</font></p>
-                      <p v-else><font color="royalblue">シラバスのリンク</font></p>
+                      ><p v-if="row[index] && row[index].includes('_07_')"><font color="dodgerblue">シラバスのリンク ※この科目は2017年以前入学者向けです</font></p>
+                      <p v-else-if="row[index] && row[index].includes('_06_')"><font color="dodgerblue">シラバスのリンク ※この科目は2017年以前入学者向けです</font></p>
+                      <p v-else-if="row[index] && row[index].includes('_14_')"><font color="dodgerblue">シラバスのリンク ※この科目は2017年以前入学者向けです</font></p>
+                      <p v-else-if="row[index] && row[index].includes('_15_')"><font color="dodgerblue">シラバスのリンク ※この科目は2017年以前入学者向けです</font></p>
+                      <p v-else><font color="dodgerblue">シラバスのリンク</font></p>
                       </span>
                       <span v-else> {{row[index]}} </span>
                     </td>
