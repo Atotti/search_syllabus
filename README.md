@@ -11,3 +11,4 @@
 # 他
 シラバスのデータは https://github.com/tenk-9/tmuSyllabus_scraping から持ってきています。tenkさんありがとうございます。
 これは https://gitlab.com/tamoco-mocomoco/csv-search を参考に作られています。
+連絡先:Twitter @aya172957
