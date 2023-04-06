@@ -1,3 +1,6 @@
+# 都立大シラバス検索システムCampusSquareもどき
+https://atotti.github.io/search_syllabus/public/
+
 # 概要
 
 シラバスを検索するウェブシステムです。`index.html`だけで作られています。
