@@ -1,5 +1,5 @@
 # 都立大シラバス検索システムCampusSquareもどき
-https://atotti.github.io/search_syllabus/public/
+ <a src="https://atotti.github.io/search_syllabus/public/">こちら</a>
 
 # 概要
 
