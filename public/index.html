@@ -155,6 +155,11 @@
                         v-if="row[index] && row[index].includes('http')"
                       >シラバスのリンク
                       </span>
+                      <span
+                        @click="OpenLink(row[index])"
+                        v-if="row[index] && row[index].includes('_07_')"
+                      >シラバスのリンク ※この科目は2017年以前の入学者向けです。
+                      </span>
                       <span v-else> {{row[index]}} </span>
                     </td>
                   </template>
