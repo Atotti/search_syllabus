@@ -96,7 +96,7 @@
         </div>
 
         <div
-          style="padding: 40px"
+          style="padding: 20px"
           class="container has-text-centered"
           v-if="csvCols.length > 0"
         >
@@ -114,7 +114,8 @@
                 placeholder="スペース（空白）を入力すると候補が表示されます。左で列を設定して検索する列を絞り込めます。"
                 v-model="searchKeyword"
                 :list="suggestList"
-                :filter-by-query="true">
+                :filter-by-query="true"
+                :max-suggestions="0">
               </vue-simple-suggest>
             </p>
             <p class="control">
